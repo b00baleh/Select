@@ -12,25 +12,46 @@ namespace Select
     {
         public static IEnumerable<TResult> MySelect<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector)
         {
-            var en = new MyIenumClass<TSource, TResult>(source, selector);
+            var res = new MyIenumExt<TSource,TResult>(source, selector).Get();
+            return res;
+        }
 
-            return (IEnumerable<TResult>)en;
+    }
+
+    public class MyIenumExt<TSource, TResult>
+    {
+        private readonly Func<TSource, TResult> _selector;
+        public IEnumerable<TSource> Source { get; }
+
+        public MyIenumExt(IEnumerable<TSource> source, Func<TSource, TResult> selector)
+        {
+            _selector = selector;
+            Source = source;
+        }
+
+        public IEnumerable<TResult> Get()
+        {
+            var ienumerator = Source.GetEnumerator();
+            
+            return new MyIenum<TSource, TResult>(ienumerator, _selector);
+            
         }
     }
 
-    public class MyIenumClass<TSource, TResult> : IEnumerable<TSource>
+    public class MyIenum<TSource, TResult> : IEnumerable<TResult>
     {
-        private IEnumerable<TSource> _list;
-        private Func<TSource, TResult> _selector;
-        public MyIenumClass(IEnumerable<TSource> input, Func<TSource, TResult> selector)
+        private IEnumerator<TSource> _ienumerator;
+        private readonly Func<TSource, TResult> _selector;
+
+        public MyIenum(IEnumerator<TSource> ienumerator, Func<TSource, TResult> selector)
         {
-            _list = input;
+            _ienumerator = ienumerator;
             _selector = selector;
         }
 
-        public IEnumerator<TSource> GetEnumerator()
+        public IEnumerator<TResult> GetEnumerator()
         {
-            return new MyEnumerator<TSource, TResult>(_list, _selector);
+            return new MyIenumerator<TSource, TResult>(_ienumerator, _selector);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -39,43 +60,37 @@ namespace Select
         }
     }
 
-    public class MyEnumerator<TSource, TResult> : IEnumerator<TSource>
+    public class MyIenumerator<TSource, TResult>: IEnumerator<TResult>
     {
-        private IEnumerable<TSource> _objects;
-        private Func<TSource, TResult> _selector;
-        //private int _pos = -1;
+        private readonly IEnumerator<TSource> _ienumerator;
+        private readonly Func<TSource, TResult> _selector;
 
-        public MyEnumerator(IEnumerable<TSource> input, Func<TSource, TResult> selector)
+        public MyIenumerator(IEnumerator<TSource> ienumerator, Func<TSource, TResult> selector)
         {
-            _objects = input;
+            _ienumerator = ienumerator;
             _selector = selector;
         }
 
         public void Dispose()
         {
-            _objects.GetEnumerator().Dispose();
+            _ienumerator.Dispose();
         }
 
         public bool MoveNext()
         {
-            Console.WriteLine("+");
-            
-            return (_objects.GetEnumerator().MoveNext());
+            return _ienumerator.MoveNext();
         }
 
         public void Reset()
         {
-            _objects.GetEnumerator().Reset();
+            _ienumerator.Reset();
         }
 
-        public TSource Current
-        {
-            get { return _objects.GetEnumerator().Current; }
-        }
+        public TResult Current { get { return _selector(_ienumerator.Current); } }
 
         object IEnumerator.Current
         {
-            get { return _selector(_objects.GetEnumerator().Current); }
+            get { return _selector(_ienumerator.Current); }
         }
     }
 }
