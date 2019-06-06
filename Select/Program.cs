@@ -15,7 +15,7 @@ namespace Select
             l.Add("def");
             l.Add("ghi");
 
-            var z = l.MySelect(x => x[0]).Take(2).ToArray();
+            var z = l.MySelect(x => x[0]).Take(2);
             /*
             var myclass = new MyIenumClass<int>(l);
 

@@ -12,46 +12,26 @@ namespace Select
     {
         public static IEnumerable<TResult> MySelect<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector)
         {
-            var res = new MyIenumExt<TSource,TResult>(source, selector).Get();
+            var res = new MyIenum<TSource, TResult>(source, selector);
             return res;
         }
 
     }
 
-    public class MyIenumExt<TSource, TResult>
-    {
-        private readonly Func<TSource, TResult> _selector;
-        public IEnumerable<TSource> Source { get; }
-
-        public MyIenumExt(IEnumerable<TSource> source, Func<TSource, TResult> selector)
-        {
-            _selector = selector;
-            Source = source;
-        }
-
-        public IEnumerable<TResult> Get()
-        {
-            var ienumerator = Source.GetEnumerator();
-            
-            return new MyIenum<TSource, TResult>(ienumerator, _selector);
-            
-        }
-    }
-
     public class MyIenum<TSource, TResult> : IEnumerable<TResult>
     {
-        private IEnumerator<TSource> _ienumerator;
+        private IEnumerable<TSource> _ienumerable;
         private readonly Func<TSource, TResult> _selector;
 
-        public MyIenum(IEnumerator<TSource> ienumerator, Func<TSource, TResult> selector)
+        public MyIenum(IEnumerable<TSource> ienumerable, Func<TSource, TResult> selector)
         {
-            _ienumerator = ienumerator;
+            _ienumerable = ienumerable;
             _selector = selector;
         }
 
         public IEnumerator<TResult> GetEnumerator()
         {
-            return new MyIenumerator<TSource, TResult>(_ienumerator, _selector);
+            return new MyIenumerator<TSource, TResult>(_ienumerable.GetEnumerator(), _selector);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -60,7 +40,7 @@ namespace Select
         }
     }
 
-    public class MyIenumerator<TSource, TResult>: IEnumerator<TResult>
+    public class MyIenumerator<TSource, TResult> : IEnumerator<TResult>
     {
         private readonly IEnumerator<TSource> _ienumerator;
         private readonly Func<TSource, TResult> _selector;
